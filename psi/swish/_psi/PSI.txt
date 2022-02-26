@@ -1,0 +1,13 @@
+8-) Czy zamiast Y można wpisać inny symbol?
+Można wpisać dowolną inną wielką literę lub szereg symboli zaczynający się wielką literą (bez znaków specjalnych oprócz _)
+
+8-) Czy kolejność wpisywania linii ma znaczenie?
+Nie
+
+8-)Jeżeli koniunkcję celów oznaczamy przecinkiem, to jak zapytać kto jest matką, a kto ojcem roberta?
+matka: kobieta(Y), rodzic(Y,robert) albo rodzic(Y,robert), kobieta(Y)
+ojciec: mezczyzna(Y), rodzic(Y,robert) albo  rodzic(Y,robert), mezczyzna(Y)
+
+8-)Czy nazwa użytych symboli wpływa na działanie programu? Jakie są ograniczenia na używane symbole?
+Nazwa nie ma znaczenia, ale nie może się zaczynać od wielkich liter, liczb ani znaków specjalnych.
+
