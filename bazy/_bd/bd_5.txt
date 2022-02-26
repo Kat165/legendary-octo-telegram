@@ -1,0 +1,165 @@
+5.1
+
+Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+
+łącznej liczby czekoladek w bazie danych,
+select count(idczekoladki) from czekoladki;
+
+łącznej liczby czekoladek z nadzieniem (na 2 sposoby) - podpowiedź: count(*), count(nazwaKolumny),
+select count(*) from czekoladki where nadzienie is not null;
+select count(nadzienie) from czekoladki;
+
+pudełka, w którym jest najwięcej czekoladek (uwaga: konieczne jest użycie LIMIT),
+SELECT z.idpudelka, COUNT(z.idczekoladki) as liczba_czekoladek_w_pudełku FROM zawartosc z  GROUP BY z.idpudelka ORDER BY liczba_czekoladek_w_pudełku DESC LIMIT 1; <------
+
+★ łącznej liczby czekoladek w poszczególnych pudełkach,
+select idpudelka, sum(sztuk) from zawartosc group by idpudelka order by sum(sztuk) desc;
+
+★ łącznej liczby czekoladek bez orzechów w poszczególnych pudełkach,
+select z.idpudelka, sum(z.sztuk) as liczba_czeko from zawartosc z 
+join czekoladki c using(idczekoladki)
+where z.idczekoladki not in (select c.idczekoladki from czekoladki c where c.orzechy is not null)
+group by z.idpudelka order by liczba_czeko desc;
+
+★ łącznej liczby czekoladek w mlecznej czekoladzie w poszczególnych pudełkach.
+select z.idpudelka, sum(z.sztuk) as liczba_czeko from zawartosc z
+join czekoladki c using(idczekoladki)
+where z.idczekoladki  in (select c.idczekoladki from czekoladki c where c.czekolada = 'mleczna')
+group by z.idpudelka;
+
+5.2
+Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+
+masy poszczególnych pudełek,
+select p.idpudelka, sum(cz.masa*z.sztuk) as masa from czekoladki cz join zawartosc z using(idczekoladki) join pudelka p using (idpudelka) group by p.idpudelka;
+
+pudełka o największej masie,
+select p.idpudelka, sum(cz.masa*z.sztuk) as masa from czekoladki cz join zawartosc z using(idczekoladki) join pudelka p using (idpudelka) group by p.idpudelka order by masa desc limit 1;
+
+★ średniej masy pudełka w ofercie cukierni,
+select avg(sub_q.masa)::numeric(10,2) from (
+select sum(cz.masa*z.sztuk) as masa from czekoladki cz 
+join zawartosc z using(idczekoladki) 
+join pudelka p using (idpudelka) 
+group by p.idpudelka
+) sub_q;
+
+★ średniej wagi pojedynczej czekoladki w poszczególnych pudełkach,
+select p.idpudelka, (sum(cz.masa*z.sztuk)/sum(z.sztuk)) as srednia from czekoladki cz 
+join zawartosc z using(idczekoladki)
+join pudelka p using (idpudelka)
+group by p.idpudelka;
+
+5.3
+Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+
+liczby zamówień na poszczególne dni,
+select datarealizacji, count(*) from zamowienia group by datarealizacji order by datarealizacji;
+
+łącznej liczby wszystkich zamówień,
+select count(idzamowienia) from zamowienia;
+
+★ łącznej wartości wszystkich zamówień,
+select sum(p.cena*a.sztuk) from zamowienia z join artykuly a using(idzamowienia) join pudelka p using(idpudelka);
+
+★ klientów, liczby złożonych przez nich zamówień i łącznej wartości złożonych przez nich zamówień.
+select z.idklienta,count(z.idzamowienia) as liczba_zamowien, sum(p.cena*a.sztuk) as cena_zamowien 
+from zamowienia z 
+join artykuly a using(idzamowienia) 
+join pudelka p using(idpudelka) 
+group by idklienta order by idklienta;
+
+
+
+5.4
+Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+
+czekoladki, która występuje w największej liczbie pudełek,
+select c.idczekoladki, c.nazwa, count(z.idpudelka) from czekoladki c 
+join zawartosc z using(idczekoladki) 
+group by c.idczekoladki order by  count(z.idpudelka) desc limit 1;
+
+
+pudełka, które zawiera najwięcej czekoladek bez orzechów,
+select p.idpudelka, sum(z.sztuk) from pudelka p 
+join zawartosc z using(idpudelka) 
+join czekoladki c using(idczekoladki) 
+where c.orzechy is null 
+group by p.idpudelka order by  sum(z.sztuk) desc limit 1;
+
+
+★ czekoladki, która występuje w najmniejszej liczbie pudełek,
+select c.idczekoladki, c.nazwa, count(z.idpudelka) from czekoladki c 
+join zawartosc z using(idczekoladki) 
+group by c.idczekoladki order by  count(z.idpudelka) limit 1;
+
+
+★ pudełka, które jest najczęściej zamawiane przez klientów.
+select a.idpudelka, sum(sztuk) from artykuly a group by a.idpudelka order by sum(sztuk) desc limit 1;
+
+
+5.5
+Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+
+liczby zamówień na poszczególne kwartały,
+select date_part('year', datarealizacji), date_part('quarter',z.datarealizacji), count(z.idzamowienia) from zamowienia z 
+group by date_part('year', datarealizacji), date_part('quarter',z.datarealizacji);
+
+liczby zamówień na poszczególne miesiące,
+SELECT date_part('year',z.datarealizacji) as rok, date_part('month',z.datarealizacji) as miesiac, count(z.idzamowienia)
+FROM zamowienia z
+GROUP BY date_part('year',z.datarealizacji), date_part('month',z.datarealizacji);
+
+
+★ liczby zamówień do realizacji w poszczególnych tygodniach,
+SELECT date_part('year',z.datarealizacji) as rok, date_part('week',z.datarealizacji) as tydzien, count(z.idzamowienia)
+FROM zamowienia z
+GROUP BY date_part('year',z.datarealizacji), date_part('week',z.datarealizacji);
+
+
+★ liczby zamówień do realizacji w poszczególnych miejscowościach.
+select k.miejscowosc, count(z.idzamowienia) from klienci k join zamowienia z using(idklienta) group by k.miejscowosc;
+
+
+5.6
+Napisz zapytanie w języku SQL wyświetlające informacje na temat:
+
+łącznej masy wszystkich pudełek czekoladek znajdujących się w cukierni,
+SELECT SUM(sub_q.masa) FROM (SELECT p.idpudelka, SUM(cz.masa*z.sztuk*p.stan) as masa
+FROM
+    czekoladki cz
+    JOIN zawartosc z ON cz.idczekoladki = z.idczekoladki
+    JOIN pudelka p ON z.idpudelka = p.idpudelka
+GROUP BY p.idpudelka) sub_q;
+
+
+★ łącznej wartości wszystkich pudełek czekoladek znajdujących się w cukierni.
+select sum(stan*cena) from pudelka;
+
+
+5.7
+Zakładając, że koszt wytworzenia pudełka czekoladek jest równy kosztowi wytworzenia zawartych w nim czekoladek, napisz zapytanie wyznaczające:
+
+zysk ze sprzedaży jednej sztuki poszczególnych pudełek (różnica między ceną pudełka i kosztem jego wytworzenia),
+select z.idpudelka, p.cena - sum(c.koszt * z.sztuk) as zysk from pudelka p 
+join zawartosc z using(idpudelka) 
+join czekoladki c using(idczekoladki) 
+group by z.idpudelka, p.cena;
+
+zysk ze sprzedaży zamówionych pudełek,
+select sum(a.sztuk*sub_q.zysk) as calkowity_zysk from artykuly a join (
+	select p.idpudelka, p.cena - sum(c.koszt * z.sztuk) as zysk from pudelka p 
+		join zawartosc z using(idpudelka) 
+		join czekoladki c using(idczekoladki) 
+		group by p.idpudelka
+) sub_q using(idpudelka);
+
+
+★ zysk ze sprzedaży wszystkich pudełek czekoladek w cukierni.
+select sum(p.stan*sub_q.zysk) as calkowity_zysk from pudelka p join (
+	select p.idpudelka, p.cena - sum(c.koszt * z.sztuk) as zysk from pudelka p 
+		join zawartosc z using(idpudelka) 
+		join czekoladki c using(idczekoladki) 
+		group by p.idpudelka
+) sub_q using(idpudelka);
+

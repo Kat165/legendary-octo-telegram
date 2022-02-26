@@ -1,0 +1,89 @@
+SELECT idklienta, SUM(lubi::int)::numeric/COUNT(lubi) 
+	FROM oceny 
+	GROUP BY idklienta;
+#średnia ocen użytkownika
+
+SELECT idplaylisty, COUNT(idutworu) FROM zawartosc GROUP BY idplaylisty;
+#liczba utworów na playliscie
+
+SELECT idklienta, COUNT(idplaylisty) from playlisty group by idklienta;
+#liczba playlist uzytkownika
+
+SELECT idklienta, COUNT(idutworu) FROM playlisty JOIN zawartosc USING(idplaylisty);
+#liczba piosenek we wszystkich playlistach
+
+SELECT AVG(dlugosc) FROM utwory;
+#średnia dlugość utworu
+
+SELECT idalbumu, SUM(dlugosc)::numeric/COUNT(idutworu) FROM utwory GROUP BY idalbumu;
+lub
+SELECT a.idalbumu, AVG(u.dlugosc)
+FROM albumy a
+  JOIN utwory u USING(idalbumu)
+GROUP BY idalbumu;
+#średnia długość każdego albumu
+
+WITH alb AS (SELECT idalbumu, SUM(dlugosc)::numeric/COUNT(idutworu) as sred FROM utwory GROUP BY idalbumu)
+	SELECT avg(sred) FROM alb;
+#średnia długość albumu
+
+
+SELECT idklienta FROM klienci 
+	JOIN oceny USING(idklienta) 
+		WHERE idutworu IN (
+SELECT idutworu FROM klienci 
+	JOIN oceny USING(idklienta) 
+		WHERE idklienta = 'd08' AND lubi = true
+) WHERE idklienta <> 'd08' AND lubi = true;
+#kto ma polubiony ten sam utwór co klient 'd08'
+
+SELECT k.idklienta, COUNT(*)
+	FROM klienci k
+	JOIN playlisty p USING(idklienta)
+	JOIN zawartosc z USING(idplaylisty)
+	JOIN utwory u USING(idutworu)
+	JOIN albumy a USING(idalbumu)
+WHERE a.nazwa = 'Jeszcze 5 minut'
+GROUP BY k.idklienta;
+#ile utworów z albumu "Jeszcze 5 minut" dany użytkownik ma w swojej playliscie (nawet jak ma kilka utworów w 1 i w 2)
+
+
+#którzy klienci nie polubili żadnego utworu
+SELECT idklienta from klienci left join oceny using(idklienta) where lubi is null;
+
+#pobierz informacje o wykonawcy(idwykonawcy,nazwa,kraj), który zadebiutował 20 lat temu i zakończyl kariere 3 lata temu
+select idwykonawcy, nazwa, kraj from wykonawcy 
+	where date_part('year', current_date) - date_part('year', data_debiutu) = 20 and date_part('year', current_date)-date_part('year', data_zakonczenia) = 3;
+
+#pobierz informacje o albumie(idalbumu, nazwa) który jest z popu i zostal wykonany przez Andrzeja Midure
+SELECT a.idalbumu, a.nazwa from albumy a join wykonawcy w using (idwykonawcy) where a.gatunek = 'pop' and w.nazwa = 'Andrzej Midura'
+
+#podaj utwory, ktore nie maja zadnych ocen
+select idutworu from utwory
+except
+select idutworu from utwory join oceny using(idutworu);
+
+select u.idutworu from utwory u left join oceny o using(idutworu) where o.idutworu = null; 
+
+#zaktualizuj ocene klienta, ktory jednak odlubil oceniony utwor o id=91
+update oceny set lubi=null where idutworu = 91 and idklienta =@;
+
+
+# dodaj klienta o id 92, loginie "zawor@nie_zdacie_tepe_debile.pl", dacie rejestracji takiej samej jak klient o id=90 i dacie urodzenia 30.05.2001 
+insert into klienci values (select 92, "zawor@nie_zdacie_tepe_debile.pl", data_rejstracji, '30.05.2001' from klienci where idklienta = 90);
+
+#podaj playlisty, które zawierają utwory, których dlugosc jest wieksza od 200 sekund i nazwa zawiera w sobie wyraz "ar"
+select p.idplaylisty from playlisty p 
+	join zawartosc z using(idplaylisty) 
+	join utwory u using(idutworu) 
+		where u.dlugosc>200 and u.nazwa ilike '%ar%';
+
+
+# podaj idklienta, ilosc jego ocen dla utworów, które mają id w przedziale od 21 do 55
+select idklienta, count(oceny) from klienci join oceny using(idklienta) where idutworu between 21 and 55 group by idklienta;
+
+
+#podaj albumy(idalbumu) zawierajace przynajmniej jeden utwor ktory dostal wiecej niz 10 pozytywnych ocen od klientow
+select idalbumu from albumy join utwory using (idalbumu) join oceny using(idutworu) where count(o.idklienta)>10 and lubi = true group by idalbumu; 
+
+

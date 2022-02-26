@@ -1,0 +1,7 @@
+INSERT INTO ostrzezenia VALUES
+	(SELECT MAX(id_ostrzezenia) + 1 FROM ostrzezenia),
+	(SELECT MAX(id_punktu) FROM  punkty_pomiarowe p, rzeki r WHERE p.id_rzeki = r.id_rzeki AND r.nazwa = 'San'),
+	(SELECT czas_pomiaru FROM pomiary po, punkty_pomiarowe p, rzeki r WHERE p.id_rzeki = r.id_rzeki AND r.nazwa = 'San' AND po.idpunktu = p.idpunktu  HAVING MAX(id_pomiaru)>=all(SELECT id_pomiaru FROM pomiary),
+	(SELECT po.poziom_wody - p.stan_ostrzegawczy FROM pomiary po, punkty_pomiarowe p, rzeki r WHERE po.id_punktu = p.id_punktu HAVING MAX(id_pomiaru)>=all(SELECT id_pomiaru FROM pomiary),
+	(SELECT po.poziom_wody - p.stan_alarmowy FROM pomiary po, punkty_pomiarowe p WHERE po.id_punktu = p.id_punktu HAVING MAX(id_pomiaru)>=all(SELECT id_pomiaru FROM pomiary),
+	(SELECT ABS(p1.poziom_wody - p2.poziom_wody) FROM pomiary p1, pomiary p2, punkty_pomiarowe p, rzeki r WHERE p.id_rzeki = r.id_rzeki AND r.nazwa = 'San' AND p1.idpunktu = p.idpunktu AND p2.idpunktu = p.idpunktu <---,

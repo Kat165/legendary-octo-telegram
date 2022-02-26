@@ -1,0 +1,110 @@
+2.1
+wyświetla listę klientów (nazwa, ulica, miejscowość) posortowaną według nazw klientów,
+select nazwa, ulica, miejscowosc from klienci order by nazwa;
+
+wyświetla listę klientów posortowaną malejąco według nazw miejscowości, a w ramach tej samej miejscowości rosnąco według nazw klientów,
+select nazwa, ulica, miejscowosc from klienci order by miejscowosc desc, nazwa asc;
+
+wyświetla listę klientów z Krakowa lub z Warszawy posortowaną malejąco według nazw miejscowości, a w ramach tej samej miejscowości rosnąco
+według nazw klientów (zapytanie utwórz na dwa sposoby stosując w kryteriach or lub in).
+select nazwa, ulica, miejscowosc from klienci where miejscowosc in ('Warszawa','Kraków') order by miejscowosc desc, nazwa asc;
+select nazwa, ulica, miejscowosc from klienci where miejscowosc ='Warszawa' or miejscowosc = 'Kraków'  order by miejscowosc desc, nazwa asc;
+
+wyświetla listę klientów posortowaną malejąco według nazw miejscowości,
+select nazwa, ulica, miejscowosc from klienci order by miejscowosc desc;
+
+wyświetla listę klientów z Krakowa posortowaną według nazw klientów.
+select nazwa, ulica, miejscowosc from klienci where miejscowosc = 'Kraków' order by nazwa;
+
+2.2
+wyświetla nazwę i masę czekoladek, których masa jest większa niż 20 g,
+select nazwa, masa from czekoladki where masa>20;
+
+wyświetla nazwę, masę i koszt produkcji czekoladek, których masa jest większa niż 20 g i koszt produkcji jest większy niż 25 gr,
+select nazwa, masa, koszt from czekoladki where masa>20 and koszt>0.25;
+
+j.w. ale koszt produkcji musi być podany w groszach,
+select nazwa, masa, cast( koszt*100 as int) as koszt from czekoladki where masa>20 and koszt>0.25;
+
+wyświetla nazwę oraz rodzaj czekolady, nadzienia i orzechów dla czekoladek, które są w mlecznej czekoladzie i nadziane malinami lub są w mlecznej czekoladzie 
+i nadziane truskawkami lub zawierają orzechy laskowe, ale nie są w gorzkiej czekoladzie,
+select nazwa, czekolada, nadzienie, orzechy from czekoladki where (czekolada = 'mleczna' and nadzienie in ('maliny','truskawki')) or (orzechy = 'laskowe' and czekolada not in ('gorzka'));
+
+wyświetla nazwę i koszt produkcji czekoladek, których koszt produkcji jest większy niż 25 gr,
+select nazwa, koszt from czekoladki where koszt>0.25;
+
+wyświetla nazwę i rodzaj czekolady dla czekoladek, które są w białej lub mlecznej czekoladzie.
+select nazwa, czekolada from czekoladki where czekolada in ('biała','mleczna');
+
+2.3
+select 124 * 7 + 45;
+
+select 2 ^ 20;
+select power(2,20);
+
+select sqrt(3);
+
+select pi();
+
+2.4
+Napisz zapytanie w języku SQL wyświetlające informacje na temat czekoladek (IDCzekoladki, Nazwa, Masa, Koszt), których:
+
+masa mieści się w przedziale od 15 do 24 g,
+select idczekoladki, nazwa, masa, koszt from czekoladki where masa between 15 and 24;
+
+koszt produkcji mieści się w przedziale od 25 do 35 gr,
+select idczekoladki, nazwa, masa, koszt from czekoladki where koszt between 0.25 and 0.35;
+
+ masa mieści się w przedziale od 25 do 35 g lub koszt produkcji mieści się w przedziale od 15 do 24 gr.
+select idczekoladki, nazwa, masa, koszt from czekoladki where masa between 25 and 35 or koszt between 0.15 and 0.24;
+
+2.5
+Napisz zapytanie w języku SQL wyświetlające informacje na temat czekoladek (idCzekoladki, nazwa, czekolada, orzechy, nadzienie), które:
+
+zawierają jakieś orzechy,
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where orzechy is not null;
+
+nie zawierają orzechów,
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where orzechy is null;
+
+zawierają jakieś orzechy lub jakieś nadzienie,
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where orzechy is not null or nadzienie is not null;
+
+są w mlecznej lub białej czekoladzie (użyj IN) i nie zawierają orzechów,
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where czekolada in ('biała','mleczna') and orzechy is null;
+
+nie są ani w mlecznej ani w białej czekoladzie i zawierają jakieś orzechy lub jakieś nadzienie,
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where czekolada not in ('biała','mleczna') and (orzechy is not null or nadzienie is not null);
+
+zawierają jakieś nadzienie,
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nadzienie is not null;
+
+nie zawierają nadzienia,
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nadzienie is null;
+
+nie zawierają orzechów ani nadzienia,
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nadzienie is null and orzechy is null;
+
+są w mlecznej lub białej czekoladzie i nie zawierają nadzienia.
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nadzienie is null and czekolada in ('mleczna','biała');
+
+2.6
+Napisz zapytanie w języku SQL, które wyświetli czekoladki których:
+
+masa mieści się w przedziale od 15 do 24 g lub koszt produkcji mieści się w przedziale od 15 do 24 gr,
+select nazwa, masa, koszt from czekoladki where masa between 15 and 24 or koszt between 0.15 and 0.24;
+
+masa mieści się w przedziale od 15 do 24 g i koszt produkcji mieści się w przedziale od 15 do 24 gr lub masa mieści się w przedziale od 25 do 35 g
+ i koszt produkcji mieści się w przedziale od 25 do 35 gr,
+select nazwa, masa, koszt from czekoladki where (masa between 15 and 24 and koszt between 0.15 and 0.24) or (masa between 25 and 35 and koszt between 0.25 and 0.35);
+
+ masa mieści się w przedziale od 15 do 24 g i koszt produkcji mieści się w przedziale od 15 do 24 gr,
+select nazwa, masa, koszt from czekoladki where masa between 15 and 24 and koszt between 0.15 and 0.24;
+
+ masa mieści się w przedziale od 25 do 35 g, ale koszt produkcji nie mieści się w przedziale od 25 do 35 gr,
+select nazwa, masa, koszt from czekoladki where (masa between 25 and 35 and koszt not between 0.25 and 0.35);
+
+ masa mieści się w przedziale od 25 do 35 g, ale koszt produkcji nie mieści się ani w przedziale od 15 do 24 gr, ani w przedziale od 25 do 35 gr.
+select nazwa, masa, koszt from czekoladki where (masa between 25 and 35 and koszt not between 0.15 and 0.24 and koszt not between 0.25 and 0.35);
+
+

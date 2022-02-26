@@ -1,0 +1,151 @@
+Utwórz (i przetestuj działanie) wyzwalacz (w schemacie kwiaciarnia), który przy złożeniu zamówienia przez klienta:
+oblicza rabat dla sprzedającego (użyj funkcji z zadania 11.7) i modyfikuje pole cena w dodawanym rekordzie,
+zmniejsza liczbę dostępnych kompozycji w tabeli kompozycje,
+dodaje rekord do tabeli zapotrzebowanie, jeśli stan danej kompozycji spada poniżej stanu minimalnego.
+
+DROP TRIGGER IF EXISTS tr_przedZamowieniem ON kwiaciarnia.zamowienia;
+
+CREATE OR REPLACE FUNCTION kwiaciarnia.fn_przedZamowieniem()
+RETURNS TRIGGER AS
+$$
+DECLARE rabat INTEGER;
+DECLARE stanRoznica INTEGER;
+BEGIN
+
+    rabat := kwiaciarnia.rabat(new.idklienta);
+
+    IF rabat > 0 THEN
+        new.cena := new.cena - (new.cena * (rabat::decimal / 100::decimal));
+    END IF;
+
+    UPDATE kwiaciarnia.kompozycje
+    SET stan = stan - 1
+    WHERE idkompozycji = new.idkompozycji;
+
+    SELECT (stan - minimum) INTO stanRoznica
+    FROM kwiaciarnia.kompozycje
+    WHERE idkompozycji = new.idkompozycji;
+
+    IF (stanRoznica < 0) THEN
+        INSERT INTO kwiaciarnia.zapotrzebowanie
+        (idkompozycji, data)
+        VALUES
+        (new.idkompozycji, CURRENT_DATE)
+        ON CONFLICT (idkompozycji) DO UPDATE SET data = CURRENT_DATE;
+    END IF;
+
+    RETURN new;
+
+END;
+$$ LANGUAGE PLpgSQL;
+
+CREATE TRIGGER tr_przedZamowieniem
+BEFORE INSERT ON kwiaciarnia.zamowienia
+FOR EACH ROW
+EXECUTE PROCEDURE kwiaciarnia.fn_przedZamowieniem();
+
+12.2.1
+Utwórz wyzwalacz modyfikujący (po aktualizacji rekordów w tabeli pudelka) pole cena w tabeli pudelka, jeżeli cena jest mniejsza niż 105% kosztów wytworzenia danego pudełka czekoladek 
+(koszt wytworzenia czekoladek + koszt pudełka 0,90 zł). W takim przypadku cenę należy ustawić na kwotę 105% kosztów wytworzenia.
+
+DROP TRIGGER IF EXISTS tr_przedAktualizacja ON pudelka;
+
+CREATE OR REPLACE FUNCTION fn_przedAktualizacja()
+RETURNS TRIGGER AS
+$$
+DECLARE koszt_wytw NUMERIC(7,2);
+BEGIN
+    
+    SELECT SUM(cz.koszt * z.sztuk) + 0.9 INTO koszt_wytw
+    FROM
+        pudelka p
+        INNER JOIN zawartosc z ON p.idpudelka = z.idpudelka
+        INNER JOIN czekoladki cz ON cz.idczekoladki = z.idczekoladki
+    WHERE
+        p.idpudelka = new.idpudelka
+    GROUP BY p.idpudelka;
+
+    IF new.cena < 1.05*koszt_wytw THEN
+        new.cena = 1.05*koszt_wytw; 
+    END IF;
+   
+    RETURN new;
+
+END;
+$$ LANGUAGE PLpgSQL;
+
+CREATE TRIGGER tr_przedAktualizacja
+BEFORE UPDATE ON pudelka
+FOR EACH ROW
+EXECUTE PROCEDURE fn_przedAktualizacja();
+
+12.2.2
+★ Utwórz wyzwalacz modyfikujący (przy wstawianiu i aktualizacji rekordów w tabeli zawartosc) pole cena w tabeli pudelka, jeżeli cena jest mniejsza niż 105% kosztów wytworzenia danego 
+pudełka czekoladek (koszt wytworzenia czekoladek + koszt pudełka 0,90 zł). W takim przypadku cenę należy ustawić na kwotę 105% kosztów wytworzenia.
+
+
+CREATE OR REPLACE FUNCTION tr_przedAktualizacjaIWstaw()
+RETURNS TRIGGER AS
+$$
+DECLARE koszt_wytw NUMERIC(7,2);
+BEGIN
+    
+    SELECT SUM(cz.koszt * z.sztuk) + 0.9 INTO koszt_wytw
+    FROM
+        pudelka p
+        INNER JOIN zawartosc z ON p.idpudelka = z.idpudelka
+        INNER JOIN czekoladki cz ON cz.idczekoladki = z.idczekoladki
+    WHERE
+        p.idpudelka = new.idpudelka
+    GROUP BY p.idpudelka;
+
+    IF new.cena < 1.05*koszt_wytw THEN
+        new.cena = 1.05*koszt_wytw; 
+    END IF;
+   
+    RETURN new;
+
+END;
+$$ LANGUAGE PLpgSQL;
+
+CREATE TRIGGER tr_przedAktualizacjaIWstaw
+BEFORE UPDATE, INSERT ON pudelka    <----------------------------------nie działa
+FOR EACH ROW
+EXECUTE PROCEDURE tr_przedAktualizacjaIWstaw();
+
+12.2.3
+★ Utwórz wyzwalacz modyfikujący (przy aktualizacji rekordów w tabeli czekoladki) pole cena w tabeli pudelka, jeżeli cena jest mniejsza niż 105% kosztów wytworzenia danego pudełka 
+czekoladek (koszt wytworzenia czekoladek + koszt pudełka 0,90 zł). W takim przypadku cenę należy ustawić na kwotę 105% kosztów wytworzenia.
+
+
+DROP TRIGGER IF EXISTS tr_poAktualizacji ON pudelka;
+
+CREATE OR REPLACE FUNCTION tr_poAktualizacji()
+RETURNS TRIGGER AS
+$$
+DECLARE koszt_wytw NUMERIC(7,2);
+BEGIN
+    
+    SELECT SUM(cz.koszt * z.sztuk) + 0.9 INTO koszt_wytw
+    FROM
+        pudelka p
+        INNER JOIN zawartosc z ON p.idpudelka = z.idpudelka
+        INNER JOIN czekoladki cz ON cz.idczekoladki = z.idczekoladki
+    WHERE
+        p.idpudelka = new.idpudelka
+    GROUP BY p.idpudelka;
+
+    IF new.cena < 1.05*koszt_wytw THEN
+        new.cena = 1.05*koszt_wytw; 
+    END IF;
+   
+    RETURN null;
+
+END;
+$$ LANGUAGE PLpgSQL;
+
+CREATE TRIGGER tr_poAktualizacji
+AFTER UPDATE ON pudelka
+FOR EACH ROW
+EXECUTE PROCEDURE tr_poAktualizacji();
+

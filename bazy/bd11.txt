@@ -1,0 +1,179 @@
+11.1
+1)Napisz funkcję masaPudelka wyznaczającą masę pudełka jako sumę masy czekoladek w nim zawartych. Funkcja jako argument przyjmuje identyfikator pudełka. 
+Przetestuj działanie funkcji na podstawie prostej instrukcji select.
+
+CREATE OR REPLACE FUNCTION masaPudelka(in arg1 CHARACTER(4))
+RETURNS INTEGER AS
+$$
+DECLARE 
+    wynik INTEGER;
+BEGIN
+    SELECT SUM(c.masa*z.sztuk) INTO wynik
+    FROM
+        pudelka p
+        JOIN zawartosc z USING (idpudelka)
+        JOIN czekoladki c USING (idczekoladki)
+    WHERE p.idpudelka = arg1;
+
+    RETURN wynik;
+END;
+$$ LANGUAGE PLpgSQL;
+SELECT masaPudelka('alls');
+
+2)★ Napisz funkcję liczbaCzekoladek wyznaczającą liczbę czekoladek znajdujących się w pudełku. Funkcja jako argument przyjmuje identyfikator pudełka. 
+Przetestuj działanie funkcji na podstawie prostej instrukcji select.
+
+CREATE OR REPLACE FUNCTION liczbaCzekoladek(in arg1 CHARACTER(4))
+RETURNS INTEGER AS
+$$
+DECLARE 
+    wynik INTEGER;
+BEGIN
+    SELECT SUM(sztuk) INTO wynik
+    FROM
+        zawartosc 
+    WHERE idpudelka = arg1;
+
+    RETURN wynik;
+END;
+$$ LANGUAGE PLpgSQL;
+
+SELECT liczbaCzekoladek('alls');
+
+
+11.2
+1)Napisz funkcję zysk obliczającą zysk jaki cukiernia uzyskuje ze sprzedaży jednego pudełka czekoladek, zakładając, że zysk ten jest różnicą między ceną pudełka, 
+a kosztem wytworzenia zawartych w nim czekoladek i kosztem opakowania (0,90 zł dla każdego pudełka). Funkcja jako argument przyjmuje identyfikator pudełka. 
+Przetestuj działanie funkcji na podstawie prostej instrukcji select.
+
+CREATE OR REPLACE FUNCTION zysk(in arg1 CHARACTER(4))
+RETURNS NUMERIC AS
+$$
+DECLARE 
+    wynik NUMERIC(7,2);
+BEGIN
+    SELECT p.cena - (sum(c.koszt*z.sztuk)+0.9) INTO wynik
+    from 
+	czekoladki c 
+		join zawartosc z using(idczekoladki) 
+		join pudelka p using(idpudelka) 
+    WHERE z.idpudelka = arg1
+    group by z.idpudelka, p.cena ;
+
+    RETURN wynik;
+END;
+$$ LANGUAGE PLpgSQL;
+
+SELECT zysk('alls');
+
+2)Napisz instrukcję select obliczającą zysk jaki cukiernia uzyska ze sprzedaży pudełek zamówionych w wybranym dniu.
+
+
+
+11.3
+1)Napisz funkcję sumaZamowien obliczającą łączną wartość zamówień złożonych przez klienta, które czekają na realizację 
+(są w tabeli Zamowienia). Funkcja jako argument przyjmuje identyfikator klienta. Przetestuj działanie funkcji.
+
+CREATE OR REPLACE FUNCTION sumaZamowien(in arg1 INTEGER)
+RETURNS NUMERIC AS
+$$
+DECLARE
+    wynik NUMERIC(7,2);
+BEGIN
+    SELECT SUM(a.sztuk*p.cena) INTO wynik
+    FROM
+        zamowienia z
+        NATURAL JOIN artykuly a
+        NATURAL JOIN pudelka p
+    WHERE z.idklienta = arg1;
+
+    RETURN wynik;
+END;
+$$ LANGUAGE PLpgSQL;
+
+2)Napisz funkcję rabat obliczającą rabat jaki otrzymuje klient składający zamówienie. Funkcja jako argument przyjmuje identyfikator klienta. Rabat wyliczany jest na podstawie 
+wcześniej złożonych zamówień w sposób następujący:
+4 % jeśli wartość zamówień jest z przedziału 101-200 zł;
+7 % jeśli wartość zamówień jest z przedziału 201-400 zł;
+8 % jeśli wartość zamówień jest większa od 400 zł.
+
+CREATE OR REPLACE FUNCTION rabat(in arg1 INTEGER)
+RETURNS INTEGER AS
+$$
+DECLARE 
+    wynik INTEGER;
+    suma NUMERIC(7,2);
+BEGIN
+    SELECT sumaZamowien(arg1) INTO suma;
+    if suma between 101 and 200 then
+	wynik :=4;
+    elsif suma between 201 and 400 then
+	wynik := 7;
+    elsif suma > 400 then
+	wynik := 8;
+    else 
+	wynik := 0;
+    end if;
+
+    RETURN wynik;
+END;
+$$ LANGUAGE PLpgSQL;
+
+SELECT rabat(1);
+
+albo
+
+CREATE OR REPLACE FUNCTION rabat(in arg1 INTEGER)
+RETURNS INTEGER AS
+$$
+DECLARE wynik INTEGER;
+DECLARE wartoscZamowien INTEGER;
+BEGIN
+    SELECT SUM(a.sztuk*p.cena) INTO wartoscZamowien
+    FROM
+        zamowienia z
+        NATURAL JOIN artykuly a
+        NATURAL JOIN pudelka p
+    WHERE z.idklienta = arg1;
+
+    IF wartoscZamowien BETWEEN 101 AND 200 THEN
+        wynik := 4;
+    ELSIF wartoscZamowien BETWEEN 201 AND 400 THEN
+        wynik := 7;
+    ELSIF wartoscZamowien > 400 THEN
+        wynik := 8;
+    ELSE
+        wynik := 0;
+    END IF;
+
+    RETURN wynik;
+END;
+$$ LANGUAGE PLpgSQL;
+
+SELECT rabat(1);
+
+11.4
+Napisz bezargumentową funkcję podwyzka, która dokonuje podwyżki kosztów produkcji czekoladek o:
+
+3 gr dla czekoladek, których koszt produkcji jest mniejszy od 20 gr;
+4 gr dla czekoladek, których koszt produkcji jest z przedziału 20-29 gr;
+5 gr dla pozostałych.
+Funkcja powinna ponadto podnieść cenę pudełek o tyle o ile zmienił się koszt produkcji zawartych w nich czekoladek.
+
+Przed testowaniem działania funkcji wykonaj zapytania, które umieszczą w plikach dane na temat kosztów czekoladek i cen pudełek tak, 
+aby można było później sprawdzić poprawność działania funkcji podwyzka. Przetestuj działanie funkcji.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

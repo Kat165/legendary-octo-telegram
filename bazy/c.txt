@@ -1,0 +1,262 @@
+Napisz funkcję masaPudelka wyznaczającą masę pudełka jako sumę masy czekoladek w nim zawartych. 
+Funkcja jako argument przyjmuje identyfikator pudełka. 
+Przetestuj działanie funkcji na podstawie prostej instrukcji select.
+
+CREATE OR REPLACE FUNCTION masaPudelka(in id CHAR(4))
+RETURNS INTEGER AS
+$$
+DECLARE
+wynik integer
+BEGIN
+select sum(z.sztuk*c.masa) into wynik from zawartosc z join czekoladki c using(idczekoladki)where idpudelka = id;
+RETURN wynik;
+end;
+$$LANGUAGE PLpgSQL;
+
+
+
+★ Napisz funkcję liczbaCzekoladek wyznaczającą liczbę czekoladek znajdujących się w pudełku. 
+Funkcja jako argument przyjmuje identyfikator pudełka. 
+Przetestuj działanie funkcji na podstawie prostej instrukcji select.
+
+CREATE OR REPLACE FUNCTION liczbaCzekoladek(in id CHAR(4))
+RETURNS INTEGER AS
+$$
+DECLARE
+wynik integer
+BEGIN
+select sum(z.sztuk) into wynik from zawartosc z join czekoladki c using(idczekoladki)where idpudelka = id;
+RETURN wynik;
+end;
+$$LANGUAGE PLpgSQL;
+
+Napisz funkcję zysk obliczającą zysk jaki cukiernia uzyskuje ze sprzedaży jednego pudełka czekoladek, zakładając, że zysk ten jest różnicą między ceną pudełka, 
+a kosztem wytworzenia zawartych w nim czekoladek i kosztem opakowania (0,90 zł dla każdego pudełka). 
+Funkcja jako argument przyjmuje identyfikator pudełka. Przetestuj działanie funkcji na podstawie prostej instrukcji select.
+
+CREATE OR REPLACE FUNCTION zysk(in id CHAR(4))
+RETURNS NUMERIC (7,2) AS
+$$
+DECLARE
+wynik numeric (7,2)
+BEGIN
+select p.cena - sum(z.sztuk*c.koszt) - 0.9 into wynik from pudelka p join zawartosc z using(idpudelka) join czekoladki c using(idczekoladki) where idpudelka = id GROUP BY idpudelka, cena;
+RETURN wynik;
+end;
+$$LANGUAGE PLpgSQL;
+
+
+Napisz instrukcję select obliczającą zysk jaki cukiernia uzyska ze sprzedaży pudełek zamówionych w wybranym dniu.
+
+select sum(zysk(idpudelka)) from pudelka p join artykuly a using (idpudelka) join zamowienia z using(idzamowienia) where z.datarealizacji = d
+
+CREATE OR REPLACE FUNCTION zysk_dzien(in d date)
+RETURNS NUMERIC (7,2) AS
+$$
+DECLARE
+wynik numeric (7,2)
+BEGIN
+select sum(zysk(idpudelka)*a.sztuk)into wynik from pudelka p join artykuly a using (idpudelka) join zamowienia z using(idzamowienia) where z.datarealizacji = d GROUP BY idpudelka;
+RETURN wynik;
+end;
+$$LANGUAGE PLpgSQL;
+
+Napisz funkcję sumaZamowien obliczającą łączną wartość zamówień złożonych przez klienta, które czekają na realizację (są w tabeli Zamowienia). 
+Funkcja jako argument przyjmuje identyfikator klienta. Przetestuj działanie funkcji.
+
+CREATE OR REPLACE FUNCTION sumaZamowien(in id integer)
+RETURNS NUMERIC (7,2) AS
+$$
+DECLARE
+wynik numeric (7,2)
+BEGIN
+select sum(p.cena*a.sztuk) into wynik from pudelka p join artykuly a using (idpudelka) join zamowienia z using(idzamowienia) join klienci k using(idklienta) where k.idklienta = k;
+RETURN wynik;
+end;
+$$LANGUAGE PLpgSQL;
+
+Napisz funkcję rabat obliczającą rabat jaki otrzymuje klient składający zamówienie. Funkcja jako argument przyjmuje identyfikator klienta. Rabat wyliczany jest na podstawie wcześniej złożonych zamówień w sposób następujący:
+4 % jeśli wartość zamówień jest z przedziału 101-200 zł;
+7 % jeśli wartość zamówień jest z przedziału 201-400 zł;
+8 % jeśli wartość zamówień jest większa od 400 zł.
+
+CREATE OR REPLACE FUNCTION rabat(in id integer)
+RETURNS NUMERIC (7,2) AS
+$$
+DECLARE
+wynik NUMERIC(7,2)
+suma numeric(7,2)
+BEGIN
+select sumaZamowien(id) into suma;
+
+wynik := CASE
+	WHEN (wartoscZamowienia > 100 AND wartoscZamowienia <= 200) THEN 4 
+        WHEN (wartoscZamowienia > 200 AND wartoscZamowienia <= 400) THEN 7 
+        WHEN wartoscZamowienia  > 400 THEN 8  
+	ELSE 0 END;
+RETURN wynik;
+END;
+$$LANGUAGE PLpgSQL;
+
+
+
+Napisz bezargumentową funkcję podwyzka, która dokonuje podwyżki kosztów produkcji czekoladek o:
+
+3 gr dla czekoladek, których koszt produkcji jest mniejszy od 20 gr;
+4 gr dla czekoladek, których koszt produkcji jest z przedziału 20-29 gr;
+5 gr dla pozostałych.
+Funkcja powinna ponadto podnieść cenę pudełek o tyle o ile zmienił się koszt produkcji zawartych w nich czekoladek.
+
+
+
+CREATE OR REPLACE FUNCTION podwyzka()
+RETURNS void AS
+$$
+DECLARE zmiana NUMERIC(10,2);
+DECLARE czekoladka RECORD;
+DECLARE zaw RECORD;
+BEGIN
+	FOR czekoladka IN SELECT * FROM czekoladki LOOP
+		zmiana := case 
+				when czekoladka.koszt < 20 then 0.03
+				when czekoladka.koszt > 20 and czekoladka.koszt < 29 then 0.04
+				else 0.05 end;
+		UPDATE czekoladki SET koszt=koszt + zmiana WHERE idczekoladki=czekoladka.idczekoladki;
+	
+		FOR zaw IN SELECT * FROM zawartosc WHERE idczekoladki=czekoladka.idczekoladki LOOP
+				UPDATE pudelka SET cena= cena + (zmiana * zaw.sztuk) 
+				WHERE idpudelka=zaw.idpudelka;
+		END LOOP;
+
+	END LOOP;
+END;
+$$ LANGUAGE PLpgSQL;
+
+
+
+Napisz funkcję obnizka odwracająca zmiany wprowadzone w poprzedniej funkcji. Przetestuj działanie funkcji.
+
+
+CREATE OR REPLACE FUNCTION obniżka()
+RETURNS void AS
+$$
+DECLARE zmiana NUMERIC(10,2);
+DECLARE czekoladka RECORD;
+DECLARE zaw RECORD;
+BEGIN
+	FOR czekoladka IN SELECT * FROM czekoladki LOOP
+		zmiana := case 
+				when czekoladka.koszt < 23 then 0.03
+				when czekoladka.koszt > 23 and czekoladka.koszt < 32 then 0.04
+				else 0.05 end;
+		UPDATE czekoladki SET koszt=koszt - zmiana WHERE idczekoladki=czekoladka.idczekoladki;
+	
+		FOR zaw IN SELECT * FROM zawartosc WHERE idczekoladki=czekoladka.idczekoladki LOOP
+				UPDATE pudelka SET cena= cena - (zmiana * zaw.sztuk) 
+				WHERE idpudelka=zaw.idpudelka;
+		END LOOP;
+
+	END LOOP;
+END;
+$$ LANGUAGE PLpgSQL;
+
+11.5
+Napisz funkcję zwracającą informacje o zamówieniach złożonych przez klienta, którego identyfikator podawany jest jako argument wywołania funkcji. 
+W/w informacje muszą zawierać: idzamowienia, idpudelka, datarealizacji. Przetestuj działanie funkcji. Uwaga: Funkcja zwraca więcej niż 1 wiersz!
+
+CREATE OR REPLACE FUNCTION info()
+RETURNS TABLE (
+	f_idzamowienia INTEGER, 
+	f_idpudelka CHARACTER(4),
+	f_datarealizacji DATE) AS
+$$
+BEGIN
+	RETURN QUERY 
+	SELECT z.idzamowienia, a.idpudelka, z.datarealizacji 
+	FROM zamowienia z INNER JOIN artykuly a USING(idzamowienia)
+	WHERE z.idklienta=id;
+END;
+$$ LANGUAGE PLpgSQL;
+
+★ Napisz funkcję zwracającą listę klientów z miejscowości, której nazwa podawana jest jako argument wywołania funkcji. Lista powinna zawierać: nazwę klienta i adres. 
+Przetestuj działanie funkcji.
+
+CREATE FUNCTION info2(miasto varchar(15))
+RETURNS TABLE(
+	f_nazwa varchar(15),
+	f_adres varchar(15)) AS
+&&
+BEGIN
+	RETURN QUERY
+	SELECT nazwa, ulica FROM klienci WHERE miejscowosc = miasto;
+END:
+$$ LANGUAGE PLpgSQL;
+
+
+Napisz funkcję rabat obliczającą rabat jaki otrzymuje klient kwiaciarni składający zamówienie. Funkcję utwórz w schemacie kwiaciarnia. 
+Rabat wyliczany jest na podstawie zamówień bieżących (tabela zamowienia) i z ostatnich siedmiu dni (tabela historia) w sposób następujący:
+
+5 % jeśli wartość zamówień jest większa od 0 lecz nie większa od 100 zł;
+10 % jeśli wartość zamówień jest z przedziału 101-400 zł;
+15 % jeśli wartość zamówień jest z przedziału 401-700 zł;
+20 % jeśli wartość zamówień jest większa od 700 zł.
+
+CREATE OR REPLACE FUNCTION rabat(id VARCHAR(10))
+RETURNS INTEGER AS
+$$
+DECLARE wynik INTEGER;
+DECLARE wartoscZamowien INTEGER;
+DECLARE wartoscHistorii INTEGER;
+DECLARE wartoscSuma INTEGER;
+BEGIN
+    SELECT SUM(cena) INTO wartoscZamowien
+    FROM
+        kwiaciarnia.zamowienia
+    WHERE idklienta = arg1;
+
+    SELECT SUM(cena) INTO wartoscHistorii
+    FROM
+        kwiaciarnia.historia
+    WHERE idklienta = arg1 AND termin > CURRENT_DATE - interval '7 days';
+
+    wartoscSuma := wartoscZamowien + wartoscHistorii;
+
+    IF wartoscSuma BETWEEN 1 AND 100 THEN
+        wynik := 5;
+    ELSEIF wartoscSuma BETWEEN 101 AND 400 THEN
+        wynik := 10;
+    ELSEIF wartoscSuma BETWEEN 401 AND 700 THEN
+        wynik := 15;
+    ELSEIF wartoscSuma > 700 THEN
+        wynik := 20;
+    ELSE
+        wynik := 0;
+    END IF;
+
+    RETURN wynik;
+END;
+$$ LANGUAGE PLpgSQL;
+
+napisz funkcję punktyPomiaroweStat nie przyjmującą argumentów i zwracającą tabele punkty_pomiarowe zawierającą 2 dodatkowe kolumny - liczbę ostrzeżeń oraz średni poziom wody 
+(nie mogą być null)
+
+
+CREATE OR REPLACE FUNCTION punktyPomiaroweStat()
+RETURNS TABLE(
+	f_idpunktu integer,
+	f_nr_po integer,
+	...
+	f_liczba_ostrzeżeń integer,
+	f_sredni_pozim_wody integer
+) AS
+$$
+BEGIN
+RETURNS QUERY
+	SELECT idpunktu, ...., coalecse(count(idostrzeżenia),0), coalesce(avg(poziom_wody),0) from punkty_pomiarowe 
+		left join ostrzeżenia using(idpunktu) 
+		left join pomiary using(idpunktu) 
+			group by idpunktu;
+END;
+$$ LANGUAGE PLpgSQL;
+
+

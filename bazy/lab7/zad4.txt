@@ -1,0 +1,3 @@
+Klient składa jedno lub wiele zamówień. Każde zamówienie ma dokładnie jedną fakturę. Każda faktura ma 1 lub więcej medodę płatności.Każdy artykół należy do co najmniej 1 szczegółu zamówienia, a każde zamówienie zawiera 
+co najmniej jeden szczegół Każdy szczegół jest umieszczony w w co najmniej 1 transporcie.Pracowik może ale nie musi przygotowywać transportów. Pracownik może ale nie musi obsługiwać zamówień. Każdy sposób transportu 
+może być przypisany dla co najmniej 1 zamówienia, ale zamówienie może być transportowany tylko na 1 sposób.

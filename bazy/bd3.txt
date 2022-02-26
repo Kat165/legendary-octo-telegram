@@ -1,0 +1,46 @@
+3.1
+1)
+SELECT idzamowienia, datarealizacji FROM zamowienia WHERE DATE_PART('month' , datarealizacji)=11
+INTERSECT
+SELECT idzamowienia, datarealizacji FROM zamowienia WHERE DATE_PART('day' , datarealizacji)>12
+INTERSECT
+SELECT idzamowienia, datarealizacji FROM zamowienia WHERE DATE_PART('day' , datarealizacji)<20;
+
+2)
+ SELECT idzamowienia, datarealizacji FROM zamowienia WHERE DATE_PART('month', datarealizacji)=12
+INTERSECT
+(SELECT idzamowienia, datarealizacji FROM zamowienia WHERE DATE_PART('day' , datarealizacji)>1 AND  DATE_PART('day' , datarealizacji)<6
+UNION
+SELECT idzamowienia, datarealizacji FROM zamowienia WHERE DATE_PART('day' , datarealizacji)>15 AND  DATE_PART('day' , datarealizacji)<20);
+
+3)<-------------------
+
+4)
+SELECT idzamowienia, datarealizacji FROM zamowienia WHERE DATE_PART('month', datarealizacji)=11
+INTERSECT
+SELECT idzamowienia, datarealizacji FROM zamowienia WHERE DATE_PART('year' , datarealizacji)=2013;
+
+3.2
+1)SELECT idCzekoladki, nazwa, czekolada, orzechy, nadzienie FROM czekoladki WHERE nazwa LIKE 'S%';
+2)SELECT idCzekoladki, nazwa, czekolada, orzechy, nadzienie FROM czekoladki WHERE nazwa LIKE 'S%i';
+3)SELECT idCzekoladki, nazwa, czekolada, orzechy, nadzienie FROM czekoladki WHERE nazwa LIKE 'S% m%';
+4)SELECT idCzekoladki, nazwa, czekolada, orzechy, nadzienie FROM czekoladki WHERE nazwa ~ '^(A|B|C)';
+5)SELECT idCzekoladki, nazwa, czekolada, orzechy, nadzienie FROM czekoladki WHERE nazwa ILIKE '%orzech%';
+
+3.3
+1) NIE MA TAKICH W BAZIE SELECT miejscowosc FROM klienci WHERE miejscowosc LIKE '% %';
+2)SELECT nazwa FROM klienci WHERE telefon LIKE '0%';
+
+3.4
+1)SELECT idCzekoladki, nazwa, masa, koszt FROM czekoladki WHERE masa>15 and masa<24
+UNION
+SELECT idCzekoladki, nazwa, masa, koszt FROM czekoladki WHERE koszt >15 and koszt<24;
+2)SELECT idCzekoladki, nazwa, masa, koszt FROM czekoladki WHERE masa>25 and masa<35
+INTERSECT
+SELECT idCzekoladki, nazwa, masa, koszt FROM czekoladki WHERE koszt >0.15 and koszt>0.35;
+3)<--------
+
+3.5
+1)NIE MA TAKICH W BAZIE  SELECT idklienta FROM klienci EXCEPT SELECT idklienta FROM zamowienia;
+2)NIE MA TAKICH W BAZIE  SELECT idpudelka FROM pudelka EXCEPT  SELECT idpudelka FROM artykuly ;
+

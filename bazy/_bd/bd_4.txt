@@ -1,0 +1,235 @@
+4.2
+
+Napisz zapytanie w języku SQL wyświetlające informacje na temat zamówień (data realizacji, idzamowienia), które:
+
+zostały złożone przez klienta, który ma na imię Antoni,
+select z.datarealizacji, z.idzamowienia, k.nazwa from zamowienia z join klienci k on(k.idklienta = z.idklienta and k.nazwa similar to '%Antoni%');
+
+zostały złożone przez klientów z mieszkań (zwróć uwagę na pole ulica),
+select z.datarealizacji, z.idzamowienia, k.ulica from zamowienia z join klienci k on(k.idklienta = z.idklienta and k.ulica similar to '%/%');
+
+★ zostały złożone przez klienta z Krakowa do realizacji w listopadzie 2013 roku.
+select z.datarealizacji, z.idzamowienia, k.miejscowosc from zamowienia z join klienci k on(k.idklienta = z.idklienta and k.miejscowosc = 'Kraków' 
+and DATE_PART('month' , z.datarealizacji)=11 and DATE_PART('year' , datarealizacji)=2013);
+
+
+4.3
+Napisz zapytanie w języku SQL wyświetlające informacje na temat klientów (nazwa, ulica, miejscowość), którzy:
+
+złożyli zamówienia z datą realizacji nie starszą niż sprzed pięciu lat,
+select k.nazwa, k.ulica, k.miejscowosc, z.datarealizacji from klienci k join zamowienia z on(k.idklienta = z.idzamowienia and  DATE_PART('year' , datarealizacji)>2012);
+
+zamówili pudełko Kremowa fantazja lub Kolekcja jesienna,
+select distinct k.nazwa, k.ulica, k.miejscowosc from klienci k <-------------distinct
+join zamowienia z on k.idklienta = z.idklienta 
+join artykuly a on  z.idzamowienia = a.idzamowienia 
+join pudelka p on a.idpudelka = p.idpudelka 
+where p.nazwa in('Kremowa fantazja','Kolekcja jesienna');
+
+ SELECT k.nazwa, k.ulica, k.miejscowosc
+FROM
+    klienci k
+WHERE
+    k.idklienta IN (
+        SELECT k2.idklienta
+        FROM
+            klienci k2
+            INNER JOIN zamowienia z ON k2.idklienta = z.idklienta
+            INNER JOIN artykuly a ON z.idzamowienia = a.idzamowienia
+            INNER JOIN pudelka p ON a.idpudelka = p.idpudelka
+        WHERE p.nazwa IN ('Kremowa fantazja', 'Kolekcja jesienna')
+    )
+;
+
+
+
+złożyli przynajmniej jedno zamówienie,
+select k.nazwa, k.ulica, k.miejscowosc from klienci k join zamowienia z using(idklienta);
+
+nie złożyli żadnych zamówień,
+select k.nazwa, k.ulica, k.miejscowosc from klienci k left join zamowienia z on k.idklienta = z.idklienta where z.idzamowienia is null;
+
+
+★ złożyli zamówienia z datą realizacji w listopadzie 2013,
+select k.nazwa, k.ulica, k.miejscowosc, z.datarealizacji from klienci k 
+left join zamowienia z on k.idklienta = z.idklienta where date_part('month',z.datarealizacji) = 11 and  date_part('year',z.datarealizacji) =2013;
+
+
+★ zamówili co najmniej 2 sztuki pudełek Kremowa fantazja lub Kolekcja jesienna w ramach jednego zamówienia,
+select distinct k.nazwa, k.ulica, k.miejscowosc from klienci k
+join zamowienia z on k.idklienta = z.idklienta 
+join artykuly a on  z.idzamowienia = a.idzamowienia 
+join pudelka p on a.idpudelka = p.idpudelka 
+where p.nazwa in('Kremowa fantazja','Kolekcja jesienna') and a.sztuk>1;
+
+★ zamówili pudełka, które zawierają czekoladki z migdałami.
+select distinct k.nazwa, k.ulica, k.miejscowosc, c.orzechy from klienci k
+join zamowienia z on k.idklienta = z.idklienta
+join artykuly a on  z.idzamowienia = a.idzamowienia
+join zawartosc s on s.idpudelka = a.idpudelka
+join pudelka p on a.idpudelka = p.idpudelka 
+join czekoladki c on c.idczekoladki = s.idczekoladki where c.orzechy = 'migdały';
+
+
+4.4
+Napisz zapytanie w języku SQL wyświetlające informacje na temat pudełek i ich zawartości (nazwa, opis, nazwa czekoladki, opis czekoladki):
+
+wszystkich pudełek,
+select p.nazwa, p.opis, cz.nazwa, cz.opis from pudelka p join zawartosc z using(idpudelka) join czekoladki cz using(idczekoladki);
+
+pudełka o wartości klucza głównego heav,
+select p.nazwa, p.opis, cz.nazwa, cz.opis from pudelka p join zawartosc z using(idpudelka) join czekoladki cz using(idczekoladki) where p.idpudelka = 'heav';
+
+★ pudełek, których nazwa zawiera słowo Kolekcja.
+SELECT p.nazwa as "nazwa pudełka", p.opis, cz.nazwa as "nazwa czekoladki", z.sztuk FROM pudelka p JOIN zawartosc z ON z.idpudelka=p.idpudelka 
+JOIN czekoladki cz ON z.idczekoladki=cz.idczekoladki where p.nazwa ilike '%Kolekcja%';
+
+4.5
+Napisz zapytanie w języku SQL wyświetlające informacje na temat pudełek z czekoladkami (nazwa, opis, cena), które (uwaga: może być konieczne użycie konstrukcji z poprzednich laboratoriów):
+
+zawierają czekoladki o wartości klucza głównego d09
+select p.nazwa, p.opis, p.cena, cz.idczekoladki from pudelka p join zawartosc z using(idpudelka) join czekoladki cz using(idczekoladki) where cz.idczekoladki = 'd09';
+
+zawierają przynajmniej jedną czekoladkę, której nazwa zaczyna się na S,
+select distinct p.nazwa, p.opis, p.cena from pudelka p join zawartosc z using(idpudelka) join czekoladki cz using(idczekoladki) where cz.nazwa like 'S%';
+
+zawierają przynajmniej 4 sztuki czekoladek jednego gatunku (o takim samym kluczu głównym),
+select distinct p.nazwa, p.opis, p.cena from pudelka p join zawartosc z using(idpudelka) join czekoladki cz using(idczekoladki) where z.sztuk>3;
+
+zawierają czekoladki z nadzieniem truskawkowym,
+select distinct p.nazwa, p.opis, p.cena from pudelka p join zawartosc z using(idpudelka) join czekoladki cz using(idczekoladki) where cz.nadzienie ='truskawki';
+
+nie zawierają czekoladek w gorzkiej czekoladzie,
+select distinct p.nazwa, p.opis, p.cena from pudelka p join zawartosc z using(idpudelka) join czekoladki cz using(idczekoladki) where cz.czekolada not in ('gorzka'); <----czemu nie działa
+
+SELECT p.idpudelka, p.nazwa as "nazwa pudełka", p.opis, p.cena FROM pudelka p WHERE p.idpudelka NOT IN 
+(SELECT p.idpudelka FROM pudelka p JOIN zawartosc z ON z.idpudelka=p.idpudelka JOIN czekoladki cz ON z.idczekoladki=cz.idczekoladki WHERE cz.czekolada='gorzka') ORDER BY p.idpudelka;
+
+★ zawierają co najmniej 3 sztuki czekoladki Gorzka truskawkowa,
+select distinct p.nazwa, p.opis, p.cena from pudelka p join zawartosc z using(idpudelka) join czekoladki cz using(idczekoladki) where z.sztuk>2 and cz.nazwa = 'Gorzka truskawkowa';
+
+★ nie zawierają czekoladek z orzechami,
+
+SELECT DISTINCT p.nazwa, p.opis  
+FROM
+    pudelka p
+    LEFT JOIN zawartosc z ON p.idpudelka = z.idpudelka
+    LEFT JOIN czekoladki cz ON (
+        z.idczekoladki = cz.idczekoladki
+        AND cz.orzechy IS NOT NULL
+    )
+WHERE cz.idczekoladki IS NULL
+
+select p.nazwa, p.opis, p.cena from pudelka p where idpudelka not in (
+select idpudelka from pudelka 
+	join zawartosc using(idpudelka) 
+	join czekoladki using(idczekoladki) 
+		where orzechy is not null);
+
+★ zawierają czekoladki Gorzka truskawkowa,
+select distinct p.nazwa, p.opis, p.cena from pudelka p join zawartosc z using(idpudelka) join czekoladki cz using(idczekoladki) where cz.nazwa = 'Gorzka truskawkowa';
+
+★ zawierają przynajmniej jedną czekoladkę bez nadzienia.
+select distinct p.nazwa, p.opis, p.cena from pudelka p join zawartosc z using(idpudelka) join czekoladki cz using(idczekoladki) where cz.nadzienie is null;
+
+4.6
+Napisz poniższe zapytania w języku SQL:
+
+Wyświetl wartości kluczy głównych oraz nazwy czekoladek, których koszt jest większy od kosztu czekoladki o wartości klucza głównego równej d08.
+select idczekoladki from czekoladki where koszt>(select koszt from czekoladki where idczekoladki = 'd08');
+
+Kto (nazwa klienta) złożył zamówienia na takie same czekoladki (pudełka) jak zamawiała Górka Alicja.
+SELECT kk.nazwa
+FROM
+    klienci kk
+    INNER JOIN zamowienia zz ON kk.idklienta = zz.idklienta
+    INNER JOIN artykuly aa ON zz.idzamowienia = aa.idzamowienia
+    INNER JOIN (
+        SELECT a.idpudelka
+        FROM
+            klienci k
+            INNER JOIN zamowienia z ON k.idklienta = z.idklienta
+            INNER JOIN artykuly a ON z.idzamowienia = a.idzamowienia
+        WHERE k.nazwa = 'Górka Alicja'
+    ) gorka ON aa.idpudelka = gorka.idpudelka
+WHERE kk.nazwa <> 'Górka Alicja'
+GROUP BY kk.nazwa
+ORDER BY kk.nazwa ASC;
+
+
+WITH gorka AS (
+        SELECT a.idpudelka
+        FROM
+            klienci k
+            INNER JOIN zamowienia z ON k.idklienta = z.idklienta
+            INNER JOIN artykuly a ON z.idzamowienia = a.idzamowienia
+        WHERE k.nazwa = 'Górka Alicja'
+)
+SELECT kk.nazwa
+FROM
+    klienci kk
+    INNER JOIN zamowienia zz ON kk.idklienta = zz.idklienta
+    INNER JOIN artykuly aa ON zz.idzamowienia = aa.idzamowienia
+    INNER JOIN gorka ON aa.idpudelka = gorka.idpudelka
+WHERE kk.nazwa <> 'Górka Alicja'
+GROUP BY kk.nazwa
+ORDER BY kk.nazwa ASC;
+
+select distinct  k.nazwa from klienci k 
+	join zamowienia z using(idklienta) 
+	join artykuly a using(idzamowienia) 
+		where a.idpudelka in (
+select a.idpudelka from klienci k 
+	join zamowienia z using(idklienta) 
+	join artykuly a using(idzamowienia) 
+		where k.nazwa = 'Górka Alicja'
+) and k.nazwa <> 'Górka Alicja';
+
+
+★ Kto (nazwa klienta, adres) złożył zamówienia na takie same czekoladki (pudełka) jak zamawiali klienci z Katowic.
+SELECT kk.nazwa, kk.miejscowosc, kk.ulica, kk.kod
+FROM
+    klienci kk
+    INNER JOIN zamowienia zz ON kk.idklienta = zz.idklienta
+    INNER JOIN artykuly aa ON zz.idzamowienia = aa.idzamowienia
+    INNER JOIN (
+        SELECT a.idpudelka
+        FROM
+            klienci k
+            INNER JOIN zamowienia z ON k.idklienta = z.idklienta
+            INNER JOIN artykuly a ON z.idzamowienia = a.idzamowienia
+        WHERE k.miejscowosc = 'Katowice'
+    ) gorka ON aa.idpudelka = gorka.idpudelka
+WHERE kk.miejscowosc <> 'Katowice'
+GROUP BY kk.nazwa, kk.miejscowosc, kk.ulica, kk.kod
+ORDER BY kk.nazwa ASC;
+
+
+WITH kat AS (
+        SELECT a.idpudelka
+        FROM
+            klienci k
+            INNER JOIN zamowienia z ON k.idklienta = z.idklienta
+            INNER JOIN artykuly a ON z.idzamowienia = a.idzamowienia
+        WHERE k.miejscowosc = 'Katowice'
+)
+SELECT kk.nazwa, kk.ulica, kk.miejscowosc
+FROM
+    klienci kk
+    INNER JOIN zamowienia zz ON kk.idklienta = zz.idklienta
+    INNER JOIN artykuly aa ON zz.idzamowienia = aa.idzamowienia
+    INNER JOIN kat ON aa.idpudelka = kat.idpudelka
+WHERE kk.miejscowosc <> 'Katowice'
+GROUP BY kk.nazwa, kk.ulica, kk.miejscowosc
+ORDER BY kk.nazwa ASC
+
+select distinct k.nazwa, k.ulica, k.miejscowosc from klienci k 
+	join zamowienia z using(idklienta) 
+	join artykuly a using(idzamowienia) 
+		where a.idpudelka in (
+select a.idpudelka from  klienci k 
+	join zamowienia z using(idklienta) 
+	join artykuly a using(idzamowienia) 
+		where k.miejscowosc = 'Katowice'
+) and k.miejscowosc<>'Katowice';
+

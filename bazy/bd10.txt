@@ -1,0 +1,230 @@
+10.2
+Napisz zapytanie wyświetlające informacje na temat zamówień (dataRealizacji, idzamowienia) używając odpowiedniego operatora in/not in/exists/any/all, które:
+
+zostały złożone przez klienta, który ma na imię Antoni,
+select datarealizacji, idzamowienia from zamowienia where idklienta in(select idklienta from klienci where nazwa like '%Antoni%');
+select datarealizacji, idzamowienia from zamowienia where idklienta = any(select idklienta from klienci where nazwa like '%Antoni%');
+
+zostały złożone przez klientów z mieszkań (zwróć uwagę na pole ulica),
+select datarealizacji, idzamowienia from zamowienia where idklienta in(select idklienta from klienci where ulica like '%/%');
+select datarealizacji, idzamowienia from zamowienia where idklienta = any(select idklienta from klienci where ulica like '%/%');
+
+★ zostały złożone przez klienta z Krakowa do realizacji w listopadzie 2013 roku.
+select datarealizacji, idzamowienia from zamowienia where idklienta in
+	(select idklienta from klienci where miejscowosc like 'Kraków') 
+	and date_part('month',datarealizacji) = 11 
+	and date_part('year',datarealizacji) = 2013;
+
+select datarealizacji, idzamowienia from zamowienia where idklienta = any
+	(select idklienta from klienci where miejscowosc like 'Kraków') 
+	and date_part('month',datarealizacji) = 11 
+	and date_part('year',datarealizacji) = 2013;
+
+10.3
+Napisz zapytanie wyświetlające informacje na temat klientów (nazwa, ulica, miejscowość), używając odpowiedniego operatora in/not in/exists/any/all, którzy:
+
+złożyli zamówienia z datą realizacji 12.11.2013,
+select nazwa,ulica,miejscowosc from klienci where idklienta in(select idklienta from zamowienia where datarealizacji = '12.11.2013');
+select nazwa,ulica,miejscowosc from klienci where idklienta = any(select idklienta from zamowienia where datarealizacji = '12.11.2013');
+
+złożyli zamówienia z datą realizacji w listopadzie 2013,
+select nazwa,ulica,miejscowosc from klienci where idklienta in(select idklienta from zamowienia where date_part('month', datarealizacji) = 11 and date_part('year',datarealizacji) =2013);
+select nazwa,ulica,miejscowosc from klienci where idklienta =any(select idklienta from zamowienia where date_part('month', datarealizacji) = 11 and date_part('year',datarealizacji) =2013);
+
+zamówili pudełko Kremowa fantazja lub Kolekcja jesienna,
+select nazwa,ulica,miejscowosc from klienci where idklienta =any(
+	select z.idklienta from zamowienia z 
+	join artykuly a using(idzamowienia) 
+	join pudelka p using(idpudelka) 
+		where p.nazwa = 'Kremowa fantazja' or p.nazwa = 'Kolekcja jesienna');
+
+select nazwa,ulica,miejscowosc from klienci where idklienta in(
+	select z.idklienta from zamowienia z 
+	join artykuly a using(idzamowienia) 
+	join pudelka p using(idpudelka) 
+		where p.nazwa = 'Kremowa fantazja' or p.nazwa = 'Kolekcja jesienna');
+
+zamówili co najmniej 2 sztuki pudełek Kremowa fantazja lub Kolekcja jesienna w ramach jednego zamówienia,
+select nazwa, ulica, miejscowosc from klienci where idklienta = any(
+	select idklienta from zamowienia z 
+		natural join artykuly a 
+		natural join pudelka p 
+			where (
+				p.nazwa = 'Kremowa fantazja' or p.nazwa = 'Kolekcja jesienna') and a.sztuk>=2);
+
+
+
+
+zamówili pudełka, które zawierają czekoladki z migdałami,
+select nazwa,ulica,miejscowosc from klienci where idklienta =any(
+	select z.idklienta from zamowienia z 
+	join artykuly a using(idzamowienia) 
+	join pudelka p using(idpudelka) 
+	join zawartosc w using(idpudelka) 
+	join czekoladki c using(idczekoladki) 
+		where c.orzechy = 'migdały');
+
+select nazwa,ulica,miejscowosc from klienci where idklienta in(
+	select z.idklienta from zamowienia z 
+	join artykuly a using(idzamowienia) 
+	join pudelka p using(idpudelka) 
+	join zawartosc w using(idpudelka) 
+	join czekoladki c using(idczekoladki) 
+		where c.orzechy = 'migdały');
+
+złożyli przynajmniej jedno zamówienie,
+SELECT k.* FROM klienci k WHERE EXISTS (SELECT z.* FROM zamowienia z WHERE z.idklienta = k.idklienta);
+SELECT * FROM klienci WHERE idklienta IN (SELECT idklienta FROM zamowienia)
+
+nie złożyli żadnych zamówień.
+SELECT k.* FROM klienci k WHERE NOT EXISTS (SELECT z.* FROM zamowienia z WHERE z.idklienta = k.idklienta);
+SELECT * FROM klienci WHERE idklienta NOT IN (SELECT idklienta FROM zamowienia)
+
+10.4
+★ zawierają czekoladki o wartości klucza głównego d09
+select p.nazwa, p.opis, p.cena from pudelka p 
+	join zawartosc z using (idpudelka) 
+	join czekoladki c using(idczekoladki)  
+		where c.idczekoladki in (select idczekoladki from czekoladki where idczekoladki = 'd09');
+
+select p.nazwa, p.opis, p.cena from pudelka p 
+	join zawartosc z using (idpudelka) 
+	join czekoladki c using(idczekoladki)  
+		where c.idczekoladki = any (select idczekoladki from czekoladki where idczekoladki = 'd09');
+
+
+★ zawierają czekoladki Gorzka truskawkowa,
+select p.nazwa, p.opis, p.cena from pudelka p 
+	join zawartosc z using (idpudelka) 
+	join czekoladki c using(idczekoladki)  
+		where c.idczekoladki =any (select idczekoladki from czekoladki where nazwa = 'Gorzka truskawkowa');
+
+select p.nazwa, p.opis, p.cena from pudelka p 
+	join zawartosc z using (idpudelka) 
+	join czekoladki c using(idczekoladki)  
+		where c.idczekoladki in (select idczekoladki from czekoladki where nazwa = 'Gorzka truskawkowa');
+
+★ zawierają przynajmniej jedną czekoladkę, której nazwa zaczyna się na S,
+select nazwa, opis, cena from pudelka  where idpudelka = any(
+	select idpudelka from pudelka p 
+		join zawartosc z using (idpudelka) 
+		join czekoladki c using (idczekoladki) 
+			where c.nazwa like 'S%');
+
+★ zawierają przynajmniej 4 sztuki czekoladek jednego gatunku (o takim samym kluczu głównym),
+select nazwa, opis, cena from pudelka  where idpudelka = any(
+	select idpudelka from pudelka p 
+		join zawartosc z using (idpudelka) 
+		join czekoladki c using (idczekoladki) 
+			where z.sztuk >=4);
+
+★ zawierają co najmniej 3 sztuki czekoladki Gorzka truskawkowa,
+select nazwa, opis, cena from pudelka  where idpudelka = any(
+	select idpudelka from pudelka p 
+		join zawartosc z using (idpudelka) 
+		join czekoladki c using (idczekoladki) 
+			where z.sztuk >=3 and c.nazwa = 'Gorzka truskawkowa');
+
+★ zawierają czekoladki z nadzieniem truskawkowym,
+select nazwa, opis, cena from pudelka  where idpudelka = any(
+	select idpudelka from pudelka p 
+		join zawartosc z using (idpudelka) 
+		join czekoladki c using (idczekoladki) 
+			where c.nadzienie = 'truskawki');
+
+nie zawierają czekoladek w gorzkiej czekoladzie, <-----------------------------------------------------
+SELECT * FROM pudelka WHERE idpudelka NOT IN (
+  SELECT z.idpudelka FROM zawartosc z
+  JOIN czekoladki cz ON cz.idczekoladki = z.idczekoladki
+  WHERE cz.czekolada ~ 'gorzka'
+)
+
+nie zawierają czekoladek z orzechami,
+select p.nazwa, p.opis, p.cena from pudelka p where idpudelka not in (
+select idpudelka from pudelka 
+	join zawartosc using(idpudelka) 
+	join czekoladki using(idczekoladki) 
+		where orzechy is not null);
+
+select nazwa, opis, cena from pudelka  where idpudelka = any(
+	select idpudelka from pudelka p 
+		join zawartosc z using (idpudelka) 
+		join czekoladki c using (idczekoladki) 
+			where c.idczekoladki not in (
+				select idczekoladki from czekoladki where orzechy is not null));
+
+zawierają przynajmniej jedną czekoladkę bez nadzienia.
+select nazwa, opis, cena from pudelka  where idpudelka = any(
+	select idpudelka from pudelka p 
+		join zawartosc z using (idpudelka) 
+		join czekoladki c using (idczekoladki) 
+			where c.nadzienie is null);
+
+
+10.5
+apisz poniższe zapytania w języku SQL (używając odpowiedniego operatora, np. in/not in/exists/any/all):
+
+Wyświetl wartości kluczy głównych oraz nazwy czekoladek, których koszt jest większy od czekoladki o wartości klucza głównego równej d08.
+select idczekoladki, nazwa from czekoladki where koszt > any(select koszt from czekoladki where idczekoladki = 'd08');
+select idczekoladki, nazwa, koszt from czekoladki where koszt >all(select koszt from czekoladki where idczekoladki = 'd08');
+
+
+Kto (nazwa klienta) złożył zamówienia na takie same czekoladki (pudełka) jak zamawiała Górka Alicja.
+select distinct  k.nazwa from klienci k 
+	join zamowienia z using(idklienta) 
+	join artykuly a using(idzamowienia) 
+		where a.idpudelka in (
+select a.idpudelka from klienci k 
+	join zamowienia z using(idklienta) 
+	join artykuly a using(idzamowienia) 
+		where k.nazwa = 'Górka Alicja'
+) and k.nazwa <> 'Górka Alicja';
+
+★ Kto (nazwa klienta, adres) złożył zamówienia na takie same czekoladki (pudełka) jak zamawiali klienci z Katowic.
+select distinct  k.nazwa, k.miejscowosc from klienci k
+join zamowienia z using(idklienta)
+join artykuly a using(idzamowienia)
+where a.idpudelka in (
+select a.idpudelka from klienci k
+join zamowienia z using(idklienta)
+join artykuly a using(idzamowienia)
+where k.miejscowosc = 'Katowice'
+) and k.miejscowosc <> 'Katowice';
+
+Wyświetl nazwę pudełka oraz ilość czekoladek, dla:
+
+pudełka o największej liczbie czekoladek (bez użycia klauzuli limit),
+SELECT p.nazwa, SUM(z.sztuk) FROM pudelka p 
+INNER JOIN zawartosc z USING(idpudelka) 
+GROUP BY p.idpudelka 
+HAVING SUM(z.sztuk)>=ALL(SELECT SUM(sztuk) FROM zawartosc GROUP BY idpudelka)
+
+★ pudełka o najmniejszej liczbie czekoladek (bez użycia klauzuli limit),
+SELECT p.idpudelka, p.nazwa, SUM(z.sztuk) FROM pudelka p
+INNER JOIN zawartosc z USING(idpudelka)
+GROUP BY p.idpudelka
+HAVING SUM(z.sztuk) <= ALL(
+SELECT SUM(sztuk) FROM zawartosc
+GROUP BY idpudelka);
+
+★ pudełka, w którym liczba czekoladek jest powyżej średniej.
+SELECT p.idpudelka, p.nazwa, SUM(z.sztuk) FROM pudelka p
+INNER JOIN zawartosc z USING(idpudelka)
+GROUP BY p.idpudelka
+HAVING SUM(z.sztuk) >= ALL(
+SELECT AVG(sztuk) FROM zawartosc
+GROUP BY idpudelka);
+
+★ pudełka o największej lub najmniejszej liczbie czekoladek. SELECT p.idpudelka, p.nazwa, SUM(z.sztuk) FROM pudelka p
+INNER JOIN zawartosc z USING(idpudelka)
+GROUP BY p.idpudelka
+HAVING SUM(z.sztuk) >= ALL(
+SELECT SUM(sztuk) FROM zawartosc
+GROUP BY idpudelka
+)
+OR SUM(z.sztuk) <= ALL(
+SELECT SUM(sztuk) FROM zawartosc
+GROUP BY idpudelka);
+
+
+

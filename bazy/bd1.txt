@@ -1,0 +1,24 @@
+1.3
+Korzystając z możliwości filtrowania danych, wyszukaj dane o czekoladkach:
+które są w mlecznej czekoladzie;
+select nazwa, czekolada, orzechy from czekoladki where czekolada = 'mleczna';
+
+które są w mlecznej czekoladzie i zawierają orzechy laskowe;
+select nazwa, czekolada, orzechy from czekoladki where czekolada = 'mleczna' and orzechy = 'laskowe';
+
+które są w mlecznej lub w gorzkiej czekoladzie (użyj in);
+select nazwa, czekolada, orzechy from czekoladki where czekolada in( 'mleczna','gorzka');
+
+których masa jest większa niż 25 g.
+select nazwa, czekolada, orzechy,masa from czekoladki where masa>25;
+
+Korzystając z możliwości filtrowania danych, wyszukaj dane o klientach:
+którzy są z Gdańska, Krakowa lub Warszawy;
+select nazwa, ulica, miejscowosc from klienci where miejscowosc in ('Gdańsk','Kraków','Warszawa');
+
+którzy nie są z Gdańska;
+select nazwa, ulica, miejscowosc from klienci where miejscowosc not in ('Gdańsk');
+
+którzy mieszkają (mają siedzibę) przy ulicy Akacjowej (UWAGA: możliwe różne numery, patrz uwaga o LIKE poniżej)
+ select nazwa, ulica, miejscowosc from klienci where ulica like 'Akacjowa%';
+

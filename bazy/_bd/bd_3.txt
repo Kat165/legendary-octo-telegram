@@ -1,0 +1,230 @@
+3.1
+Napisz zapytanie w języku SQL wyświetlające informacje na temat zamówień (idZamowienia, dataRealizacji), które mają być zrealizowane:
+
+
+między 12 i 20 listopada 2013,
+select idzamowienia, datarealizacji from zamowienia where datarealizacji between '2013-11-12' and '2013-11-20';
+
+
+między 1 i 6 grudnia lub między 15 i 20 grudnia 2013
+select idzamowienia, datarealizacji from zamowienia where datarealizacji between '2013-12-01' and '2013-12-06' or  datarealizacji between '2013-12-15' and '2013-12-20';
+
+
+w grudniu 2013 (nie używaj funkcji date_part ani extract),
+select idzamowienia, datarealizacji from zamowienia where datarealizacji between '2013-12-01' and '2013-12-31';
+
+
+w listopadzie 2013 (w tym i kolejnych zapytaniach użyj funkcji date_part lub extract),
+select idzamowienia, datarealizacji from zamowienia where date_part('year',datarealizacji) = 2013 and date_part('month',datarealizacji)= 11;
+
+select idzamowienia, datarealizacji from zamowienia where extract('year' from datarealizacji) = 2013 and extract('month' from datarealizacji)= 11;
+
+
+ w listopadzie lub grudniu 2013,
+select idzamowienia, datarealizacji from zamowienia where extract('year' from datarealizacji) = 2013 and 
+(extract('month' from datarealizacji)= 11 or extract('month' from datarealizacji)= 12);
+
+select idzamowienia, datarealizacji from zamowienia where date_part('year', datarealizacji) = 2013 and (date_part('month', datarealizacji)= 11 or date_part('month', datarealizacji)= 12);
+
+
+ 17, 18 lub 19 dnia miesiąca,
+select idzamowienia, datarealizacji from zamowienia where extract('day' from datarealizacji) in (17,18,19) ;
+
+select idzamowienia, datarealizacji from zamowienia where date_part('day', datarealizacji) in (17,18,19) ;
+
+
+46 lub 47 tygodniu roku.
+select idzamowienia, datarealizacji from zamowienia where date_part('week', datarealizacji) in (46,47);
+
+select idzamowienia, datarealizacji from zamowienia where extract('week' from  datarealizacji) in (46,47);
+
+3.2
+Napisz zapytanie w języku SQL wyświetlające informacje na temat czekoladek (idCzekoladki, nazwa, czekolada, orzechy, nadzienie), których nazwa:
+
+
+rozpoczyna się na literę 'S',
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa like 'S%';
+
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa similar to 'S%';
+
+
+rozpoczyna się na literę 'S' i kończy się na literę 'i',
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa like 'S%i';
+
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa similar to 'S%i';
+
+
+rozpoczyna się na literę 'S' i zawiera słowo rozpoczynające się na literę 'm',
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa similar to 'S% m%';
+
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa like 'S% m%';
+
+
+rozpoczyna się na literę 'A', 'B' lub 'C',
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa similar to '(A|B|C)%';
+
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa like 'A%' or nazwa like 'B%' or nazwa like 'C%';
+
+
+zawiera rdzeń 'orzech' (może on wystąpić na początku i wówczas będzie pisany z wielkiej litery),
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa ilike '%orzech%';
+
+
+★ rozpoczyna się na literę 'S' i zawiera w środku literę 'm',
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa like 'S%m%';
+
+
+★ zawiera słowo 'maliny' lub 'truskawki',
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa like '%maliny%' or nazwa like '%truskawki%';
+
+
+★ nie rozpoczyna się żadną z liter: 'D'-'K', 'S' i 'T',
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa not similar to '[D-K]%' and nazwa not similar to'(S|T)%'; <-----[]
+
+
+★ rozpoczyna się od 'Slod' ('Słod'),
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa similar to 'S(l|ł)od%';
+
+
+★ składa się dokładnie z jednego słowa.
+select idczekoladki, nazwa, czekolada, orzechy, nadzienie from czekoladki where nazwa not similar to '% %';
+
+3.3
+Napisz zapytanie w języku SQL oparte na tabeli Klienci, które:
+
+wyświetla nazwy miast, z których pochodzą klienci cukierni i które składają się z więcej niż jednego słowa,
+select miejscowosc,nazwa from klienci where miejscowosc similar to '% %';
+
+select miejscowosc,nazwa from klienci where miejscowosc like '% %';
+
+
+wyświetla nazwy klientów, którzy podali numer stacjonarny telefonu,
+select nazwa from klienci where telefon like '0%';
+
+
+★ wyświetla nazwy klientów, którzy podali numer komórkowy telefonu,
+select nazwa, telefon from klienci where telefon not like '0%';
+
+
+3.4
+Korzystając z zapytań z zadania 2.4 oraz operatorów UNION, INTERSECT, EXCEPT napisz zapytanie w języku SQL wyświetlające informacje na temat czekoladek 
+(idCzekoladki, nazwa, masa, koszt), których:
+
+masa mieści się w przedziale od 15 do 24 g lub koszt produkcji mieści się w przedziale od 15 do 24 gr,
+select idczekoladki, nazwa, masa, koszt from czekoladki where masa between 15 and 24 
+union 
+select idczekoladki, nazwa, masa, koszt from czekoladki where koszt between 0.15 and 0.24;
+
+
+masa mieści się w przedziale od 25 do 35 g, ale koszt produkcji nie mieści się w przedziale od 25 do 35 gr,
+select idczekoladki, nazwa, masa, koszt from czekoladki where masa between 25 and 35 
+intersect 
+select idczekoladki, nazwa, masa, koszt from czekoladki where koszt not between 0.25 and 0.35;
+
+
+masa mieści się w przedziale od 15 do 24 g i koszt produkcji mieści się w przedziale od 15 do 24 gr 
+lub masa mieści się w przedziale od 25 do 35 g i koszt produkcji mieści się w przedziale od 25 do 35 gr,
+(select idczekoladki, nazwa, masa, koszt from czekoladki where masa between 15 and 24 intersect select idczekoladki, nazwa, masa, koszt from czekoladki where koszt between 0.15 and 0.24)
+union
+(select idczekoladki, nazwa, masa, koszt from czekoladki where masa between 25 and 35 intersect select idczekoladki, nazwa, masa, koszt from czekoladki where koszt between 0.25 and 0.35);
+
+
+★ masa mieści się w przedziale od 15 do 24 g i koszt produkcji mieści się w przedziale od 15 do 24 gr,
+select idczekoladki, nazwa, masa, koszt from czekoladki where masa between 15 and 24 
+intersect 
+select idczekoladki, nazwa, masa, koszt from czekoladki where koszt between 0.15 and 0.24;
+
+
+★ masa mieści się w przedziale od 25 do 35 g, ale koszt produkcji nie mieści się ani w przedziale od 15 do 24 gr, ani w przedziale od 29 do 35 gr.
+select idczekoladki, nazwa, masa, koszt from czekoladki where masa between 25 and 35 intersect select idczekoladki, nazwa, masa, koszt from czekoladki where koszt not between 0.15 and 0.24
+intersect select idczekoladki, nazwa, masa, koszt from czekoladki where koszt not between 0.29 and 0.35;
+
+
+3.5
+Korzystając z operatorów UNION, INTERSECT, EXCEPT napisz zapytanie w języku SQL wyświetlające:
+
+identyfikatory klientów, którzy nigdy nie złożyli żadnego zamówienia,
+ select k.idklienta from klienci k except select z.idklienta from zamowienia z;
+
+
+identyfikatory pudełek, które nigdy nie zostały zamówione,
+select p.idpudelka from pudelka p except select a.idpudelka from artykuly a;
+
+
+★ nazwy klientów, czekoladek i pudełek, które zawierają rz (lub Rz),
+select k.nazwa from klienci k where nazwa ilike '%rz%'
+union
+select c.nazwa from czekoladki c  where nazwa ilike '%rz%'
+union
+select p.nazwa from pudelka p  where nazwa ilike '%rz%';
+
+(SELECT k.nazwa FROM klienci k WHERE k.nazwa SIMILAR TO '%(rz|Rz)%') 
+UNION 
+(SELECT p.nazwa FROM pudelka p WHERE p.nazwa SIMILAR TO '%(rz|Rz)%') 
+UNION 
+(SELECT cz.nazwa FROM czekoladki cz WHERE cz.nazwa SIMILAR TO '%(rz|Rz)%');
+
+
+★ identyfikatory czekoladek, które nie występują w żadnym pudełku.
+select c.idczekoladki from czekoladki c except select z.idczekoladki from zawartosc z;
+
+3.6
+Napisz zapytanie w języku SQL wyświetlające:
+
+identyfikator meczu, sumę punktów zdobytych przez gospodarzy i sumę punktów zdobytych przez gości,
+SELECT s.idmeczu, (SELECT SUM(v) FROM UNNEST(s.gospodarze) WITH ORDINALITY a(v, n)) as "Suma punktow gospodarze", 
+(SELECT SUM(v) FROM UNNEST(s.goscie) WITH ORDINALITY a(v, n)) as "Suma punktow goscie" FROM statystyki s; <-------co to jest
+
+
+identyfikator meczu, sumę punktów zdobytych przez gospodarzy i sumę punktów zdobytych przez gości, dla meczów, które skończyły się po 5 setach i zwycięzca ostatniego seta zdobył ponad 15 punktów,
+SELECT s.idmeczu, (SELECT SUM(v) FROM UNNEST(s.gospodarze) WITH ORDINALITY a(v, n)) as "Suma punktow gospodarze", 
+(SELECT SUM(v) FROM UNNEST(s.goscie) WITH ORDINALITY a(v, n)) as "Suma punktow goscie" FROM siatkowka.statystyki s 
+WHERE (ARRAY_LENGTH(s.gospodarze, 1) = 5) AND (((s.gospodarze[5] = 15) AND (s.gospodarze[5] > s.goscie[5])) OR ((s.goscie[5] = 15) AND (s.gospodarze[5] < s.goscie[5])));
+
+
+identyfikator i wynik meczu w formacie x:y, np. 3:1 (wynik jest pojedynczą kolumną – napisem),
+SELECT
+    idmeczu,
+    CONCAT (
+        CASE WHEN gospodarze[1] > goscie[1] THEN 1 ELSE 0 END
+        + CASE WHEN gospodarze[2] > goscie[2] THEN 1 ELSE 0 END
+        + CASE WHEN gospodarze[3] > goscie[3] THEN 1 ELSE 0 END
+        + CASE WHEN COALESCE(gospodarze[4], 0) > COALESCE(goscie[4], 0) THEN 1 ELSE 0 END
+        + CASE WHEN COALESCE(gospodarze[5], 0) > COALESCE(goscie[5], 0) THEN 1 ELSE 0 END
+    , ':',
+        CASE WHEN goscie[1] > gospodarze[1] THEN 1 ELSE 0 END
+        + CASE WHEN goscie[2] > gospodarze[2] THEN 1 ELSE 0 END
+        + CASE WHEN goscie[3] > gospodarze[3] THEN 1 ELSE 0 END
+        + CASE WHEN COALESCE(goscie[4], 0) > COALESCE(gospodarze[4], 0) THEN 1 ELSE 0 END
+        + CASE WHEN COALESCE(goscie[5], 0) > COALESCE(gospodarze[5], 0) THEN 1 ELSE 0 END
+    ) as wynik
+FROM siatkowka.statystyki;
+
+
+identyfikator meczu, sumę punktów zdobytych przez gospodarzy i sumę punktów zdobytych przez gości, dla meczów, w których gospodarze zdobyli ponad 100 punktów,
+SELECT s.idmeczu, (SELECT SUM(v) FROM UNNEST(s.gospodarze) WITH ORDINALITY a(v, n)) as "Suma punktow gospodarze",
+(SELECT SUM(v) FROM UNNEST(s.goscie) WITH ORDINALITY a(v, n)) as "Suma punktow goscie" FROM siatkowka.statystyki s
+WHERE (SELECT SUM(v) FROM UNNEST(s.gospodarze) WITH ORDINALITY a(v, n))>100;
+
+
+★ identyfikator meczu, liczbę punktów zdobytych przez gospodarzy w pierwszym secie, sumę punktów zdobytych w meczu przez gospodarzy, 
+dla meczów, w których pierwiastek kwadratowy z liczby punktów zdobytych w pierwszym secie jest mniejszy niż logarytm o podstawie 2 z sumy punktów zdobytych w meczu. ;) <-----co jest?
+SELECT helper_query.idmeczu, helper_query."Pierwszy set", helper_query."Suma punktow gospodarze" FROM 
+(SELECT s.idmeczu, s.gospodarze[1] as "Pierwszy set", (SELECT SUM(v) FROM UNNEST(s.gospodarze) WITH ORDINALITY a(v, n)) as "Suma punktow gospodarze", 
+(SELECT SUM(v) FROM UNNEST(s.goscie) WITH ORDINALITY a(v, n)) as "Suma punktow goscie" FROM siatkowka.statystyki s) as helper_query 
+WHERE sqrt(helper_query."Pierwszy set") < log(2, helper_query."Suma punktow gospodarze");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,64 @@
+update zamowienia z set z.dane_klienta = k.nazwa from klienci k ... <--nie wolno z.dane_klienta
+musi być dane_klienta, nie można join
+
+najpierw przenosimy, a póżniej czyścimy dane <-- kolejność ma znaczenie
+
+6.1
+insert into czekoladki values ('W98', 'Biały kieł', 'biała', 'laskowe', 'marcepan', 'Rozpływające się w rękach i kieszeniach', 0.45, 20);
+
+insert into klienci values
+(90, 'Matusiak Alina', 'Kropiwnickiego 6/3', 'Leningrad', '31-471', '031 423 45 38'),
+(91, 'Matusiak Edward', 'Kropiwnickiego 6/3', 'Leningrad', '31-471', '031 423 45 38'),
+(92, 'Kimono Franek','Karateków 8', 'Mistrz', '30-029', '501 498 324');
+
+insert into klienci select 93, 'Iza Matusiak', ulica, miejscowosc, kod, telefon from klienci where nazwa like 'Matusiak Edward';
+
+6.2
+insert into czekoladki values
+('X91', 'Nieznana Nieznajoma', null, null, null, 'Niewidzialna czekoladka wspomagajaca odchudzanie.', 0.26, 0),
+('M98', 'Mleczny Raj', 'mleczna', null, null, 'Aksamitna mleczna czekolada w ksztalcie butelki z mlekiem.', 0.26, 36);
+
+6.3
+delete from czekoladki where idczekoladki in ('X91','M98');
+
+6.4
+update klienci set nazwa = 'Nowak Iza' where nazwa like 'Iza Matusiak';
+
+update czekoladki set koszt = 0.9*koszt where idczekoladki in ('W98', 'M98','X91');
+
+update czekoladki set koszt = (select koszt from czekoladki where idczekoladki = 'W98') where nazwa like 'Nieznana Nieznajoma';
+
+update klienci set miejscowosc = 'Piotrograd' where miejscowosc like 'Leningrad';
+
+update czekoladki set koszt = koszt+0.15 where idczekoladki like '_9_'; <----nie do konca ok
+
+6.5
+delete from klienci where nazwa like '%Matusiak%';
+
+delete from klienci where idklienta > 91;
+
+delete from czekoladki where koszt >=0.45 or masa >= 36 or masa = 0;
+
+6.6
+Napisz skrypt zawierający instrukcje INSERT wstawiające do bazy danych Cukiernia dwa nowe rekordy do tabeli Pudelka oraz odpowiednie rekordy związane z tymi pudełkami 
+do tabeli Zawartosc. Każde z nowych pudełek ma zawierać łącznie co najmniej 10 czekoladek, w co najmniej 4 różnych smakach.
+
+
+insert into pudelka values('tes1','test1', 'testowy opis1', 14, 3),('tes2','test2', 'testowy opis2', 14, 3);
+
+insert into zawartosc values('test1','X91',4),('test1','M98', 2),('test1','d08',3),('test1','d06',2),
+('test2','X91',4),('test2','M98', 2),('test2','d08',3),('test2','W98',2);
+
+6.8
+Napisz instrukcję UDPATE, która dla pudełek dodanych w poprzednich dwóch zadaniach, zwiększa o 1 liczbę czekoladek każdego smaku, które w nich występują.
+update zawartosc set sztuk = sztuk +1 where idpudelka in('test1','test2');
+
+
+Napisz skrypt zawierający instrukcje UPDATE, które modyfikują tabelę czekoladki zastępując w kolumnach: czekolada, orzechy i nadzienie wartości Null wartością “brak”.
+update czekoladti set czekolada = 'brak' where czekolada is null;
+update czekoladti set orzechy = 'brak' where orzechy is null;
+update czekoladti set nadzienie = 'brak' where nadzienie is null;
+
+
+
+
